@@ -18,6 +18,13 @@ import { sendDm, getDmHistory } from './tools/dms.js'
 import { listForumPosts, createForumPost, readForumPost } from './tools/forums.js'
 import { sendMessageWithAttachment, getAttachmentContent } from './tools/attachments.js'
 import { initEventDispatcher, waitForMessage } from './tools/events.js'
+import { printEnvTemplate } from './init.js'
+
+// CLI: handle subcommands before starting the MCP server
+if (process.argv[2] === 'init') {
+  printEnvTemplate()
+  process.exit(0)
+}
 
 function createAuditSink(auditLog: string | false): AuditSink | undefined {
   if (auditLog === false) return undefined
@@ -27,6 +34,13 @@ function createAuditSink(auditLog: string | false): AuditSink | undefined {
 
 async function main(): Promise<void> {
   const config = loadConfig()
+
+  if (config.dryRun) {
+    console.error('[discord-mcp-plus] DRY RUN MODE — write and destructive tools will not execute')
+  }
+  if (config.confirmationToken) {
+    console.error('[discord-mcp-plus] CONFIRM TOKEN active — destructive tools require confirmToken arg')
+  }
 
   await loginClient(config.token)
   const client = getClient()
