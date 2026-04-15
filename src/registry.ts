@@ -33,7 +33,11 @@ export class ToolRegistry {
 
   private withConfirmTokenSchema(tool: ToolDef): ToolDef {
     if (!this.config.confirmationToken || tool.kind !== 'destructive') return tool
-    const schema = tool.inputSchema as { type: string; properties: Record<string, unknown>; required?: string[] }
+    const schema = tool.inputSchema as { type: string; properties?: Record<string, unknown>; required?: string[] }
+    if (!schema.properties) return tool
+    // confirmToken is added to properties but NOT to required — enforcement is in call().
+    // Adding it to required would cause MCP clients that validate schemas to reject calls
+    // before the server processes them, producing a less informative error.
     return {
       ...tool,
       inputSchema: {
@@ -121,11 +125,16 @@ export class ToolRegistry {
   ): Promise<void> {
     if (!this.auditSink) return
 
+    // Redact confirmToken from audit args to avoid leaking the secret to the audit log.
+    const auditArgs = args['confirmToken'] !== undefined
+      ? { ...args, confirmToken: '[REDACTED]' }
+      : args
+
     const entry: Record<string, unknown> = {
       ts: new Date().toISOString(),
       tool: tool.name,
       kind: tool.kind,
-      args,
+      args: auditArgs,
       durationMs,
       result,
     }
