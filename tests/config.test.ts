@@ -78,4 +78,19 @@ describe('loadConfig', () => {
     const config = loadConfig({ DISCORD_TOKEN: 'tok', DISCORD_GUILD_ID: 'guild123' })
     expect(config.guildId).toBe('guild123')
   })
+
+  it('returns null toolsAllow when all entries are whitespace', () => {
+    const config = loadConfig({ DISCORD_TOKEN: 'tok', DISCORD_MCP_TOOLS: ', , ,' })
+    expect(config.toolsAllow).toBeNull()
+  })
+
+  it('treats empty string DISCORD_MCP_READONLY as false', () => {
+    const config = loadConfig({ DISCORD_TOKEN: 'tok', DISCORD_MCP_READONLY: '' })
+    expect(config.readonly).toBe(false)
+  })
+
+  it('treats empty string DISCORD_GUILD_ID as undefined', () => {
+    const config = loadConfig({ DISCORD_TOKEN: 'tok', DISCORD_GUILD_ID: '' })
+    expect(config.guildId).toBeUndefined()
+  })
 })

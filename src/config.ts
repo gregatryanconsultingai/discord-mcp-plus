@@ -17,12 +17,16 @@ function parseBoolean(val: string | undefined, defaultVal: boolean): boolean {
 
 function parseSet(val: string | undefined): Set<string> | null {
   if (!val || val.trim() === '') return null
-  return new Set(val.split(',').map(s => s.trim()).filter(Boolean))
+  const items = val.split(',').map(s => s.trim()).filter(Boolean)
+  if (items.length === 0) return null
+  return new Set(items)
 }
 
 function parseAuditLog(val: string | undefined): string | false {
   if (val === undefined) return 'stderr'
   if (val === 'off') return false
+  // Any other value ('stderr' or a file path) is passed through as-is.
+  // The audit writer is responsible for handling the value at runtime.
   return val
 }
 
@@ -35,10 +39,10 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     guildId: env['DISCORD_GUILD_ID'] || undefined,
     readonly: parseBoolean(env['DISCORD_MCP_READONLY'], false),
     toolsAllow: parseSet(env['DISCORD_MCP_TOOLS']),
-    toolsDeny: parseSet(env['DISCORD_MCP_TOOLS_DENY']) ?? new Set(),
+    toolsDeny: parseSet(env['DISCORD_MCP_TOOLS_DENY']) ?? new Set(), // never null — empty means no denylist
     channelsAllow: parseSet(env['DISCORD_MCP_CHANNELS']),
     dryRun: parseBoolean(env['DISCORD_MCP_DRY_RUN'], false),
     auditLog: parseAuditLog(env['DISCORD_MCP_AUDIT_LOG']),
-    transport: 'stdio',
+    transport: 'stdio', // only 'stdio' supported in v0.1; reserved for HTTP transport in v1.0
   }
 }
