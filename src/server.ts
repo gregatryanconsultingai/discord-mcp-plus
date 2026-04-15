@@ -83,6 +83,7 @@ export async function startServer(registry: ToolRegistry, client: Client, config
       httpServer.once('error', reject)
       httpServer.listen(config.httpPort, () => resolve())
     })
+    console.error(`[discord-mcp-plus] HTTP transport listening on port ${config.httpPort}`)
     return
   }
 

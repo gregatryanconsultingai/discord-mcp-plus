@@ -44,9 +44,6 @@ async function main(): Promise<void> {
   if (config.confirmationToken) {
     console.error('[discord-mcp-plus] CONFIRM TOKEN active — destructive tools require confirmToken arg')
   }
-  if (config.transport === 'http') {
-    console.error(`[discord-mcp-plus] HTTP transport — listening on port ${config.httpPort}`)
-  }
 
   await loginClient(config.token)
   const client = getClient()
