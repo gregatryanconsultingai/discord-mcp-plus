@@ -10,6 +10,13 @@ async function fetchMessage(client: Client, channelId: string, messageId: string
   return channel.messages.fetch(messageId)
 }
 
+// discord.js caches reactions by emoji ID (custom emoji) or Unicode character (standard emoji).
+// When emoji is passed as name:id (e.g. party_blob:123456789), extract the ID for cache lookup.
+function resolveEmoji(emoji: string): string {
+  const colonIdx = emoji.lastIndexOf(':')
+  return colonIdx !== -1 ? emoji.slice(colonIdx + 1) : emoji
+}
+
 export const addReaction: ToolDef = {
   name: 'add_reaction',
   description: 'Add an emoji reaction to a message. Accepts Unicode emoji (👍) or custom guild emoji as name:id (party_blob:123456789).',
@@ -47,7 +54,7 @@ export const removeReaction: ToolDef = {
   async handler(args, _config, client) {
     const { channelId, messageId, emoji } = args as { channelId: string; messageId: string; emoji: string }
     const message = await fetchMessage(client, channelId, messageId)
-    const reaction = message.reactions.resolve(emoji)
+    const reaction = message.reactions.resolve(resolveEmoji(emoji))
     if (!reaction) throw new Error(`No reaction found for emoji: ${emoji}`)
     await reaction.users.remove()
     return { success: true }
@@ -73,7 +80,7 @@ export const removeUserReaction: ToolDef = {
       channelId: string; messageId: string; emoji: string; userId: string
     }
     const message = await fetchMessage(client, channelId, messageId)
-    const reaction = message.reactions.resolve(emoji)
+    const reaction = message.reactions.resolve(resolveEmoji(emoji))
     if (!reaction) throw new Error(`No reaction found for emoji: ${emoji}`)
     await reaction.users.remove(userId)
     return { success: true }
@@ -119,7 +126,7 @@ export const getReactions: ToolDef = {
       channelId: string; messageId: string; emoji: string; limit?: number
     }
     const message = await fetchMessage(client, channelId, messageId)
-    const reaction = message.reactions.resolve(emoji)
+    const reaction = message.reactions.resolve(resolveEmoji(emoji))
     if (!reaction) throw new Error(`No reactions found for emoji: ${emoji} on message ${messageId}`)
     const users = await reaction.users.fetch({ limit: Math.min(limit, 100) })
     return {
