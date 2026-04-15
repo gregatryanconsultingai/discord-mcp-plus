@@ -56,8 +56,9 @@ export const listWebhooks: ToolDef = {
       if (!resolvedGuildId) {
         throw new Error('guildId is required when channelId is not provided — set DISCORD_GUILD_ID or pass guildId arg')
       }
-      const guild = await client.guilds.fetch(resolvedGuildId)
-      webhooks = await (guild as any).fetchWebhooks()
+      const guild = await client.guilds.fetch(resolvedGuildId) as any
+      if (!guild) throw new Error(`Guild ${resolvedGuildId} not found`)
+      webhooks = await guild.fetchWebhooks()
     }
 
     return {

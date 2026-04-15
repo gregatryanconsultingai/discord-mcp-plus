@@ -133,4 +133,28 @@ describe('send_webhook_message', () => {
     expect(WebhookClient).toHaveBeenCalledWith({ url: 'https://discord.com/api/webhooks/123/token' })
     expect(result.messageId).toBe('msg789')
   })
+
+  it('forwards username and avatarUrl to webhookClient.send()', async () => {
+    const { WebhookClient } = await import('discord.js')
+    const mockSend = vi.mocked(WebhookClient).mock.results[0]?.value.send as ReturnType<typeof vi.fn>
+    // Reset call tracking from previous test
+    vi.mocked(WebhookClient).mockClear()
+    const sendSpy = vi.fn().mockResolvedValue({ id: 'msg999', channel_id: 'chan456' })
+    vi.mocked(WebhookClient).mockImplementationOnce(() => ({ send: sendSpy }) as any)
+
+    const client = makeClient()
+    await sendWebhookMessage.handler(
+      {
+        webhookUrl: 'https://discord.com/api/webhooks/123/token',
+        content: 'Hello!',
+        username: 'BotOverride',
+        avatarUrl: 'https://example.com/avatar.png',
+      },
+      baseConfig,
+      client
+    )
+    expect(sendSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ username: 'BotOverride', avatarURL: 'https://example.com/avatar.png' })
+    )
+  })
 })
