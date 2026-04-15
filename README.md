@@ -34,19 +34,94 @@ There are a few Discord MCP servers out there. This one aims to be the one you'd
 
 ---
 
-## Quick start
+## Setup
 
-### 1. Create a Discord bot
+### Step 1 — Create a Discord bot
 
+Go to [discord.com/developers/applications](https://discord.com/developers/applications), create a new application, add a bot to it, and copy the bot token. That token becomes your `DISCORD_TOKEN`.
+
+> ⚠️ **Two settings people always miss:** on the **Bot** page, scroll down to **Privileged Gateway Intents** and enable both:
+> - **Server Members Intent** — required for `list_members`, `get_member`, and all role tools
+> - **Message Content Intent** — required for `get_messages`, `search_messages`, reactions, and events
+>
+> Without these, the bot connects but returns empty results. Click **Save Changes** after enabling them.
+
+<details>
+<summary><strong>Full click-by-click walkthrough →</strong></summary>
+
+See [docs/bot-setup.md](./docs/bot-setup.md) for the complete step-by-step guide through the Discord Developer Portal.
+
+</details>
+
+---
+
+### Step 2 — Add the bot to your server
+
+In the Developer Portal, go to **OAuth2 → URL Generator**. Under **Scopes**, check `bot`. Under **Bot Permissions**, select what your use case needs. Copy the generated URL, open it in a browser, and authorize the bot into your server.
+
+> ⚠️ **Don't grant Administrator.** It works but it's reckless — if your bot token is ever leaked, an attacker has full server control. Grant only what you need.
+
+<details>
+<summary><strong>Permissions by use case →</strong></summary>
+
+**Read-only (summarize, search, monitor):**
+
+| Permission | Required for |
+| --- | --- |
+| View Channels | Everything |
+| Read Message History | `get_messages`, `search_messages` |
+
+**Standard assistant (read + write messages):**
+
+Everything above, plus:
+
+| Permission | Required for |
+| --- | --- |
+| Send Messages | `send_message`, `send_dm` |
+| Attach Files | `send_message_with_attachment` |
+| Add Reactions | `add_reaction` |
+| Create Public Threads | `create_thread` |
+
+**Full access (all tools):**
+
+Everything above, plus:
+
+| Permission | Required for |
+| --- | --- |
+| Manage Messages | `delete_message`, `remove_user_reaction`, `remove_all_reactions` |
+| Manage Channels | `create_channel`, `delete_channel` |
+| Manage Roles | `add_role`, `remove_role` |
+| Kick Members | `kick_member` |
+| Ban Members | `ban_member` |
+| Manage Webhooks | `create_webhook`, `delete_webhook`, `list_webhooks` |
+
+</details>
+
+---
+
+### Step 3 — Find your server ID (recommended)
+
+`DISCORD_GUILD_ID` is optional but highly recommended — it makes `guildId` optional on every tool call so you don't have to pass it every time.
+
+To find it: in Discord, go to **Settings → Advanced** and enable **Developer Mode**. Then right-click your server name in the sidebar and click **Copy Server ID**.
+
+---
+
+### Step 4 — Configure your MCP client
+
+Select your client below. `DISCORD_TOKEN` is required; `DISCORD_GUILD_ID` is optional but recommended.
+
+<details>
+<summary><strong>Claude Code →</strong></summary>
+
+**Option A — CLI:**
 ```bash
-npx discord-mcp-plus init
+claude mcp add discord -e DISCORD_TOKEN=your_token -e DISCORD_GUILD_ID=your_server_id -- npx -y discord-mcp-plus
 ```
 
-This prints a ready-to-use `.env` template. For a step-by-step guide to creating the bot in the Discord developer portal, see [docs/bot-setup.md](./docs/bot-setup.md).
+**Option B — Edit config directly:**
 
-### 2. Add it to your MCP client
-
-**Claude Desktop / Claude Code / Cursor / Windsurf** — add to your MCP config:
+Open `~/.claude/claude.json` and add:
 
 ```json
 {
@@ -56,14 +131,99 @@ This prints a ready-to-use `.env` template. For a step-by-step guide to creating
       "args": ["-y", "discord-mcp-plus"],
       "env": {
         "DISCORD_TOKEN": "your_bot_token",
-        "DISCORD_GUILD_ID": "optional_default_server_id"
+        "DISCORD_GUILD_ID": "your_server_id"
       }
     }
   }
 }
 ```
 
-**Docker** (for always-on / shared deployments):
+Run `claude mcp list` to verify it loaded.
+
+</details>
+
+<details>
+<summary><strong>Claude Desktop →</strong></summary>
+
+Open your config file:
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+Add under `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "discord": {
+      "command": "npx",
+      "args": ["-y", "discord-mcp-plus"],
+      "env": {
+        "DISCORD_TOKEN": "your_bot_token",
+        "DISCORD_GUILD_ID": "your_server_id"
+      }
+    }
+  }
+}
+```
+
+Fully quit and restart Claude Desktop after saving (quit from the system tray, not just close the window).
+
+</details>
+
+<details>
+<summary><strong>Cursor →</strong></summary>
+
+Open your MCP config:
+- **Project-level:** `.cursor/mcp.json` in your project root
+- **Global:** `~/.cursor/mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "discord": {
+      "command": "npx",
+      "args": ["-y", "discord-mcp-plus"],
+      "env": {
+        "DISCORD_TOKEN": "your_bot_token",
+        "DISCORD_GUILD_ID": "your_server_id"
+      }
+    }
+  }
+}
+```
+
+Reload the window after saving (`Ctrl+Shift+P` → **Reload Window**).
+
+</details>
+
+<details>
+<summary><strong>Windsurf →</strong></summary>
+
+Open `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "discord": {
+      "command": "npx",
+      "args": ["-y", "discord-mcp-plus"],
+      "env": {
+        "DISCORD_TOKEN": "your_bot_token",
+        "DISCORD_GUILD_ID": "your_server_id"
+      }
+    }
+  }
+}
+```
+
+Reload Windsurf after saving.
+
+</details>
+
+<details>
+<summary><strong>Docker (always-on / shared / team deployments) →</strong></summary>
+
+Run the container:
 
 ```bash
 docker run -d --name discord-mcp \
@@ -75,17 +235,50 @@ docker run -d --name discord-mcp \
   ryanconsultingai/discord-mcp-plus:latest
 ```
 
-Then point your MCP client at `http://localhost:3000/mcp` with header `Authorization: Bearer your_secret_token`.
+`DISCORD_MCP_HTTP_TOKEN` is required in Docker mode — use a long random string you generate yourself.
 
-### 3. Try it
+Then configure your MCP client to connect via HTTP instead of npx. In Claude Code:
 
-In your MCP client:
+```bash
+claude mcp add discord --transport http --header "Authorization: Bearer your_secret_token" http://localhost:3000/mcp
+```
 
-> Summarize the last 50 messages in #general.
+Or add to your config file directly:
 
-> List all channels and their last activity.
+```json
+{
+  "mcpServers": {
+    "discord": {
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer your_secret_token"
+      }
+    }
+  }
+}
+```
 
-> Search the server for messages about "launch date" in the last two weeks.
+</details>
+
+---
+
+### Step 5 — Verify it's working
+
+Ask your MCP client:
+
+> "What server info do you have for my Discord server?"
+
+> "List all the channels."
+
+> "Summarize the last 20 messages in #general."
+
+If you get real Discord data back, you're set.
+
+**Not working? Check these first:**
+- The bot is online in your server (green dot in the member list)
+- Both privileged intents are enabled — this is the #1 miss (Step 1)
+- The token in your config matches the current one on the Bot page (tokens can be reset, which invalidates the old one)
+- The bot was actually invited to the server and authorized (Step 2)
 
 ---
 
