@@ -72,7 +72,7 @@ docker run -d --name discord-mcp \
   -e DISCORD_TOKEN=your_token \
   -e DISCORD_GUILD_ID=your_guild_id \
   -e DISCORD_MCP_HTTP_TOKEN=your_secret_token \
-  gregatryanconsultingai/discord-mcp-plus:latest
+  ryanconsultingai/discord-mcp-plus:latest
 ```
 
 Then point your MCP client at `http://localhost:3000/mcp` with header `Authorization: Bearer your_secret_token`.

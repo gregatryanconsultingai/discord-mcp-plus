@@ -50,5 +50,5 @@ jobs:
           context: .
           push: true
           tags: |
-            gregatryanconsultingai/discord-mcp-plus:latest
-            gregatryanconsultingai/discord-mcp-plus:${{ github.ref_name }}
+            ryanconsultingai/discord-mcp-plus:latest
+            ryanconsultingai/discord-mcp-plus:${{ github.ref_name }}
