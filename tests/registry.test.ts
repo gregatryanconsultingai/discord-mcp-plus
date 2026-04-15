@@ -13,6 +13,7 @@ const baseConfig: Config = {
   channelsAllow: null,
   dryRun: false,
   auditLog: false,
+  confirmationToken: false,
   transport: 'stdio',
 }
 

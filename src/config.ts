@@ -7,6 +7,7 @@ export interface Config {
   channelsAllow: Set<string> | null // null = no channel restriction
   dryRun: boolean
   auditLog: string | false         // 'stderr', file path, or false (disabled)
+  confirmationToken: string | false // false = feature disabled
   transport: 'stdio'
 }
 
@@ -43,6 +44,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     channelsAllow: parseSet(env['DISCORD_MCP_CHANNELS']),
     dryRun: parseBoolean(env['DISCORD_MCP_DRY_RUN'], false),
     auditLog: parseAuditLog(env['DISCORD_MCP_AUDIT_LOG']),
+    confirmationToken: env['DISCORD_MCP_CONFIRM_TOKEN'] || false,
     transport: 'stdio', // only 'stdio' supported in v0.1; reserved for HTTP transport in v1.0
   }
 }

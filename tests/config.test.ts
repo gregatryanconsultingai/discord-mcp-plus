@@ -94,3 +94,15 @@ describe('loadConfig', () => {
     expect(config.guildId).toBeUndefined()
   })
 })
+
+describe('confirmationToken', () => {
+  it('parses DISCORD_MCP_CONFIRM_TOKEN when set', () => {
+    const config = loadConfig({ DISCORD_TOKEN: 'tok', DISCORD_MCP_CONFIRM_TOKEN: 'mysecret' })
+    expect(config.confirmationToken).toBe('mysecret')
+  })
+
+  it('defaults confirmationToken to false when not set', () => {
+    const config = loadConfig({ DISCORD_TOKEN: 'tok' })
+    expect(config.confirmationToken).toBe(false)
+  })
+})
