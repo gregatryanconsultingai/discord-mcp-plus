@@ -8,6 +8,7 @@ vi.mock('discord.js', async (importOriginal) => {
     ...actual,
     WebhookClient: vi.fn().mockImplementation(() => ({
       send: vi.fn().mockResolvedValue({ id: 'msg789', channel_id: 'chan123' }),
+      destroy: vi.fn(),
     })),
   }
 })
@@ -136,11 +137,10 @@ describe('send_webhook_message', () => {
 
   it('forwards username and avatarUrl to webhookClient.send()', async () => {
     const { WebhookClient } = await import('discord.js')
-    const mockSend = vi.mocked(WebhookClient).mock.results[0]?.value.send as ReturnType<typeof vi.fn>
     // Reset call tracking from previous test
     vi.mocked(WebhookClient).mockClear()
     const sendSpy = vi.fn().mockResolvedValue({ id: 'msg999', channel_id: 'chan456' })
-    vi.mocked(WebhookClient).mockImplementationOnce(() => ({ send: sendSpy }) as any)
+    vi.mocked(WebhookClient).mockImplementationOnce(() => ({ send: sendSpy, destroy: vi.fn() }) as any)
 
     const client = makeClient()
     await sendWebhookMessage.handler(

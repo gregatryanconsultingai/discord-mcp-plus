@@ -111,7 +111,11 @@ export const sendWebhookMessage: ToolDef = {
       webhookUrl: string; content: string; username?: string; avatarUrl?: string
     }
     const webhookClient = new WebhookClient({ url: webhookUrl })
-    const msg = await webhookClient.send({ content, username, avatarURL: avatarUrl })
-    return { messageId: msg.id, channelId: (msg as any).channel_id }
+    try {
+      const msg = await webhookClient.send({ content, username, avatarURL: avatarUrl })
+      return { messageId: msg.id, channelId: (msg as any).channel_id }
+    } finally {
+      webhookClient.destroy()
+    }
   },
 }

@@ -19,6 +19,7 @@ function resolveEmoji(emoji: string): string {
 
 export const addReaction: ToolDef = {
   name: 'add_reaction',
+  // message.react() accepts name:id format natively — resolveEmoji() is not needed here
   description: 'Add an emoji reaction to a message. Accepts Unicode emoji (👍) or custom guild emoji as name:id (party_blob:123456789).',
   inputSchema: {
     type: 'object',
