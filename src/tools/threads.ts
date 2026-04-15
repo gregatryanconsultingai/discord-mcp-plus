@@ -80,3 +80,64 @@ export const getThreadMessages: ToolDef = {
     }))
   },
 }
+
+export const archiveThread: ToolDef = {
+  name: 'archive_thread',
+  description: 'Archive or unarchive a Discord thread. Example: "Archive the release-notes thread"',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      threadId: { type: 'string', description: 'The thread ID' },
+      archived: { type: 'boolean', description: 'true to archive, false to unarchive (default: true)' },
+    },
+    required: ['threadId'],
+  },
+  kind: 'write',
+  handler: async (args, _config, client) => {
+    const thread = await client.channels.fetch(args['threadId'] as string)
+    if (!thread || !thread.isThread()) throw new Error('Thread not found')
+    const archived = (args['archived'] as boolean | undefined) ?? true
+    await thread.setArchived(archived)
+    return { id: thread.id, name: thread.name, archived }
+  },
+}
+
+export const addThreadMember: ToolDef = {
+  name: 'add_thread_member',
+  description: 'Add a user to a Discord thread. Example: "Add user 123 to the release-notes thread"',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      threadId: { type: 'string', description: 'The thread ID' },
+      userId: { type: 'string', description: 'The user ID to add' },
+    },
+    required: ['threadId', 'userId'],
+  },
+  kind: 'write',
+  handler: async (args, _config, client) => {
+    const thread = await client.channels.fetch(args['threadId'] as string)
+    if (!thread || !thread.isThread()) throw new Error('Thread not found')
+    await thread.members.add(args['userId'] as string)
+    return { success: true, threadId: args['threadId'], userId: args['userId'] }
+  },
+}
+
+export const removeThreadMember: ToolDef = {
+  name: 'remove_thread_member',
+  description: 'Remove a user from a Discord thread. Example: "Remove user 123 from the release-notes thread"',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      threadId: { type: 'string', description: 'The thread ID' },
+      userId: { type: 'string', description: 'The user ID to remove' },
+    },
+    required: ['threadId', 'userId'],
+  },
+  kind: 'write',
+  handler: async (args, _config, client) => {
+    const thread = await client.channels.fetch(args['threadId'] as string)
+    if (!thread || !thread.isThread()) throw new Error('Thread not found')
+    await thread.members.remove(args['userId'] as string)
+    return { success: true, threadId: args['threadId'], userId: args['userId'] }
+  },
+}
