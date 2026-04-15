@@ -1,3 +1,4 @@
+import type { TextBasedChannel } from 'discord.js'
 import type { ToolDef } from '../registry.js'
 
 export const getMessages: ToolDef = {

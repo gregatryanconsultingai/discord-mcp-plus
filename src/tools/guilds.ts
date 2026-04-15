@@ -13,7 +13,7 @@ export const listGuilds: ToolDef = {
     return guilds.map(g => ({
       id: g.id,
       name: g.name,
-      icon: g.iconURL() ?? null,
+      icon: g.icon ?? null,
     }))
   },
 }

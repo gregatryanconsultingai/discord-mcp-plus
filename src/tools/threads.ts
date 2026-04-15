@@ -14,6 +14,7 @@ export const listThreads: ToolDef = {
   kind: 'read',
   handler: async (args, _config, client) => {
     const channel = await client.channels.fetch(args['channelId'] as string)
+    // Note: excludes NewsChannel (announcement channels) which also support threads — v0.2 limitation
     if (!channel || !(channel instanceof TextChannel)) throw new Error('Channel not found or not a text channel')
     const result = await channel.threads.fetchActive()
     return result.threads.map(t => ({
@@ -42,6 +43,7 @@ export const createThread: ToolDef = {
   kind: 'write',
   handler: async (args, _config, client) => {
     const channel = await client.channels.fetch(args['channelId'] as string)
+    // Note: excludes NewsChannel (announcement channels) which also support threads — v0.2 limitation
     if (!channel || !(channel instanceof TextChannel)) throw new Error('Channel not found or not a text channel')
     let thread
     if (args['messageId']) {
