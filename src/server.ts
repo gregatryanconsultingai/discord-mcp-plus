@@ -1,13 +1,17 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js'
+import { createServer } from 'node:http'
+import { randomUUID } from 'node:crypto'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Client } from 'discord.js'
 import type { Config } from './config.js'
 import type { ToolRegistry } from './registry.js'
 
-export async function startServer(registry: ToolRegistry, client: Client, _config: Config): Promise<void> {
+export function createMcpServer(registry: ToolRegistry, client: Client): Server {
   const server = new Server(
-    { name: 'discord-mcp-plus', version: '0.1.0' },
+    { name: 'discord-mcp-plus', version: '0.7.0' },
     { capabilities: { tools: {} } }
   )
 
@@ -38,6 +42,49 @@ export async function startServer(registry: ToolRegistry, client: Client, _confi
     }
   })
 
-  const transport = new StdioServerTransport()
-  await server.connect(transport)
+  return server
+}
+
+export function handleHttpRequest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: Config,
+  transport: StreamableHTTPServerTransport
+): void {
+  const authHeader = req.headers['authorization']
+  if (!authHeader || authHeader !== `Bearer ${config.httpToken}`) {
+    res.writeHead(401, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ error: 'Unauthorized' }))
+    return
+  }
+
+  if (req.url !== '/mcp') {
+    res.writeHead(404, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ error: 'Not Found' }))
+    return
+  }
+
+  transport.handleRequest(req, res).catch((err: unknown) => {
+    console.error('[discord-mcp-plus] Transport error:', err)
+    if (!res.headersSent) {
+      res.writeHead(500)
+      res.end()
+    }
+  })
+}
+
+export async function startServer(registry: ToolRegistry, client: Client, config: Config): Promise<void> {
+  if (config.transport === 'http') {
+    const mcpServer = createMcpServer(registry, client)
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: randomUUID })
+    await mcpServer.connect(transport)
+    const httpServer = createServer((req, res) => handleHttpRequest(req, res, config, transport))
+    httpServer.listen(config.httpPort)
+    return
+  }
+
+  // stdio (default)
+  const server = createMcpServer(registry, client)
+  const stdioTransport = new StdioServerTransport()
+  await server.connect(stdioTransport)
 }
