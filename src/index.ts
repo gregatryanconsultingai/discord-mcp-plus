@@ -18,6 +18,9 @@ import { sendDm, getDmHistory } from './tools/dms.js'
 import { listForumPosts, createForumPost, readForumPost } from './tools/forums.js'
 import { sendMessageWithAttachment, getAttachmentContent } from './tools/attachments.js'
 import { initEventDispatcher, waitForMessage } from './tools/events.js'
+// v0.6 tools
+import { addReaction, removeReaction, removeUserReaction, removeAllReactions, getReactions } from './tools/reactions.js'
+import { createWebhook, listWebhooks, deleteWebhook, sendWebhookMessage } from './tools/webhooks.js'
 import { printEnvTemplate } from './init.js'
 
 // CLI: handle subcommands before starting the MCP server
@@ -103,6 +106,19 @@ async function main(): Promise<void> {
   // v0.4 tools — search & events
   registry.register(searchMessages)
   registry.register(waitForMessage)
+
+  // v0.6 tools — reactions
+  registry.register(addReaction)
+  registry.register(removeReaction)
+  registry.register(removeUserReaction)
+  registry.register(removeAllReactions)
+  registry.register(getReactions)
+
+  // v0.6 tools — webhooks
+  registry.register(createWebhook)
+  registry.register(listWebhooks)
+  registry.register(deleteWebhook)
+  registry.register(sendWebhookMessage)
 
   await startServer(registry, client, config)
 }
