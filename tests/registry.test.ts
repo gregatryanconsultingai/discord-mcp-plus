@@ -168,3 +168,30 @@ describe('ToolRegistry.call', () => {
     expect(auditLines).toHaveLength(0)
   })
 })
+
+describe('ToolRegistry dry-run', () => {
+  it('intercepts write tools and returns dryRun result shape', async () => {
+    const registry = new ToolRegistry({ ...baseConfig, dryRun: true })
+    registry.register(makeTool('write_thing', 'write'))
+    const result = await registry.call('write_thing', { channelId: '123' }, mockClient) as any
+    expect(result.dryRun).toBe(true)
+    expect(result.tool).toBe('write_thing')
+    expect(typeof result.note).toBe('string')
+    expect(result.note.toLowerCase()).toContain('dry run')
+  })
+
+  it('intercepts destructive tools and returns dryRun result shape', async () => {
+    const registry = new ToolRegistry({ ...baseConfig, dryRun: true })
+    registry.register(makeTool('delete_thing', 'destructive'))
+    const result = await registry.call('delete_thing', {}, mockClient) as any
+    expect(result.dryRun).toBe(true)
+    expect(result.tool).toBe('delete_thing')
+  })
+
+  it('does not intercept read tools — handler executes normally', async () => {
+    const registry = new ToolRegistry({ ...baseConfig, dryRun: true })
+    registry.register(makeTool('read_thing', 'read'))
+    const result = await registry.call('read_thing', {}, mockClient)
+    expect(result).toEqual({ ok: true })
+  })
+})

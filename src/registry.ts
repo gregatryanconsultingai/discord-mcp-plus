@@ -59,6 +59,12 @@ export class ToolRegistry {
       }
     }
 
+    // Dry-run: intercept write/destructive tools and return a simulated response.
+    // Read tools always execute regardless of dryRun (no side effects).
+    if (this.config.dryRun && tool.kind !== 'read') {
+      return { dryRun: true, tool: name, args, note: 'Dry run mode — action was not executed' }
+    }
+
     const start = Date.now()
     let result: unknown
 
