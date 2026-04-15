@@ -98,7 +98,7 @@ export const archiveThread: ToolDef = {
     if (!thread || !thread.isThread()) throw new Error('Thread not found')
     const archived = (args['archived'] as boolean | undefined) ?? true
     await thread.setArchived(archived)
-    return { id: thread.id, name: thread.name, archived }
+    return { id: thread.id, name: thread.name, archived: thread.archived }
   },
 }
 
@@ -118,7 +118,7 @@ export const addThreadMember: ToolDef = {
     const thread = await client.channels.fetch(args['threadId'] as string)
     if (!thread || !thread.isThread()) throw new Error('Thread not found')
     await thread.members.add(args['userId'] as string)
-    return { success: true, threadId: args['threadId'], userId: args['userId'] }
+    return { success: true, threadId: args['threadId'] as string, userId: args['userId'] as string }
   },
 }
 
@@ -138,6 +138,6 @@ export const removeThreadMember: ToolDef = {
     const thread = await client.channels.fetch(args['threadId'] as string)
     if (!thread || !thread.isThread()) throw new Error('Thread not found')
     await thread.members.remove(args['userId'] as string)
-    return { success: true, threadId: args['threadId'], userId: args['userId'] }
+    return { success: true, threadId: args['threadId'] as string, userId: args['userId'] as string }
   },
 }

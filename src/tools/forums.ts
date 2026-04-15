@@ -74,6 +74,7 @@ export const readForumPost: ToolDef = {
   handler: async (args, _config, client) => {
     const thread = await client.channels.fetch(args['postId'] as string)
     if (!thread || !thread.isThread()) throw new Error('Forum post not found')
+    if (thread.parent?.type !== ChannelType.GuildForum) throw new Error('Thread is not a forum post')
     const msgs = await thread.messages.fetch({ limit: (args['limit'] as number | undefined) ?? 50 })
     return {
       id: thread.id,
