@@ -29,6 +29,15 @@ DISCORD_TOKEN=your-bot-token-here
 
 # Audit — 'stderr' (default), 'off', or a file path
 # DISCORD_MCP_AUDIT_LOG=stderr
+
+# Transport — 'stdio' (default) or 'http'
+# DISCORD_MCP_TRANSPORT=stdio
+
+# HTTP transport — port to listen on (default 3000)
+# DISCORD_MCP_HTTP_PORT=3000
+
+# HTTP transport — bearer token for authentication (REQUIRED when transport=http)
+# DISCORD_MCP_HTTP_TOKEN=
 `
 
 export function printEnvTemplate(out: Writable = process.stdout as unknown as Writable): void {
