@@ -95,3 +95,55 @@ export const deleteMessage: ToolDef = {
     return { success: true, deletedId: args['messageId'] }
   },
 }
+
+export const searchMessages: ToolDef = {
+  name: 'search_messages',
+  description: 'Search messages in a Discord guild using Discord\'s native search. Example: "Find messages containing \'deploy failed\' in #alerts"',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      guildId: { type: 'string', description: 'The guild ID to search in (falls back to GUILD_ID config)' },
+      content: { type: 'string', description: 'Text to search for' },
+      channelId: { type: 'string', description: 'Restrict results to this channel ID' },
+      authorId: { type: 'string', description: 'Restrict results to messages from this user ID' },
+      limit: { type: 'number', description: 'Number of results to return (default: 25, max: 25)' },
+    },
+    required: [],
+  },
+  kind: 'read',
+  handler: async (args, config, client) => {
+    const guildId = (args['guildId'] as string | undefined) ?? config.guildId
+    if (!guildId) throw new Error('guildId is required: provide it as an argument or set GUILD_ID in config')
+
+    const query: Record<string, string> = {}
+    if (args['content']) query['content'] = args['content'] as string
+    if (args['channelId']) query['channel_id'] = args['channelId'] as string
+    if (args['authorId']) query['author_id'] = args['authorId'] as string
+    query['limit'] = String(Math.min((args['limit'] as number | undefined) ?? 25, 25))
+
+    const result = await client.rest.get(`/guilds/${guildId}/messages/search`, { query } as any) as {
+      total_results: number
+      messages: Array<Array<{
+        id: string
+        channel_id: string
+        author: { id: string; username: string }
+        content: string
+        timestamp: string
+      }>>
+    }
+
+    return {
+      totalResults: result.total_results,
+      messages: result.messages.map(hit => {
+        const msg = hit[0]!
+        return {
+          id: msg.id,
+          channelId: msg.channel_id,
+          author: { id: msg.author.id, username: msg.author.username },
+          content: msg.content,
+          timestamp: msg.timestamp,
+        }
+      }),
+    }
+  },
+}
