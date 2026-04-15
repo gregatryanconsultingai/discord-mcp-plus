@@ -9,7 +9,7 @@ import { startServer } from './server.js'
 import { getServerInfo, listBotPermissions } from './tools/server-info.js'
 
 // v0.2 tools
-import { getMessages, sendMessage, editMessage, deleteMessage } from './tools/messages.js'
+import { getMessages, sendMessage, editMessage, deleteMessage, searchMessages } from './tools/messages.js'
 import { listChannels, getChannel, createChannel, deleteChannel } from './tools/channels.js'
 import { listMembers, getMember, listRoles, addRole, removeRole, kickMember, banMember } from './tools/members.js'
 import { listGuilds, getGuild } from './tools/guilds.js'
@@ -17,6 +17,7 @@ import { listThreads, createThread, getThreadMessages, archiveThread, addThreadM
 import { sendDm, getDmHistory } from './tools/dms.js'
 import { listForumPosts, createForumPost, readForumPost } from './tools/forums.js'
 import { sendMessageWithAttachment, getAttachmentContent } from './tools/attachments.js'
+import { initEventDispatcher, waitForMessage } from './tools/events.js'
 
 function createAuditSink(auditLog: string | false): AuditSink | undefined {
   if (auditLog === false) return undefined
@@ -29,6 +30,7 @@ async function main(): Promise<void> {
 
   await loginClient(config.token)
   const client = getClient()
+  initEventDispatcher(client)
 
   const registry = new ToolRegistry(config, createAuditSink(config.auditLog))
 
@@ -83,6 +85,10 @@ async function main(): Promise<void> {
   // v0.3 tools — attachments
   registry.register(sendMessageWithAttachment)
   registry.register(getAttachmentContent)
+
+  // v0.4 tools — search & events
+  registry.register(searchMessages)
+  registry.register(waitForMessage)
 
   await startServer(registry, client, config)
 }
