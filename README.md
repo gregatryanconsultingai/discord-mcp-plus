@@ -238,7 +238,7 @@ All tools return structured JSON.
 - [x] v0.7 — HTTP transport (`DISCORD_MCP_TRANSPORT=http`)
 - [x] v0.8 — Dockerfile, GitHub Actions CI/publish pipelines
 - [x] v0.9 — docs, README accuracy pass
-- [ ] v1.0 — release cut, npm + Docker Hub tags
+- [x] v1.0 — release cut, npm + Docker Hub tags
 
 ---
 

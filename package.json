@@ -1,6 +1,6 @@
 {
   "name": "discord-mcp-plus",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Production-grade MCP server for Discord — search, pagination, safety controls, npx install",
   "type": "module",
   "main": "dist/index.js",
