@@ -13,8 +13,10 @@ import { getMessages, sendMessage, editMessage, deleteMessage } from './tools/me
 import { listChannels, getChannel, createChannel, deleteChannel } from './tools/channels.js'
 import { listMembers, getMember, listRoles, addRole, removeRole, kickMember, banMember } from './tools/members.js'
 import { listGuilds, getGuild } from './tools/guilds.js'
-import { listThreads, createThread, getThreadMessages } from './tools/threads.js'
+import { listThreads, createThread, getThreadMessages, archiveThread, addThreadMember, removeThreadMember } from './tools/threads.js'
 import { sendDm, getDmHistory } from './tools/dms.js'
+import { listForumPosts, createForumPost, readForumPost } from './tools/forums.js'
+import { sendMessageWithAttachment, getAttachmentContent } from './tools/attachments.js'
 
 function createAuditSink(auditLog: string | false): AuditSink | undefined {
   if (auditLog === false) return undefined
@@ -67,6 +69,20 @@ async function main(): Promise<void> {
   // v0.2 tools — DMs
   registry.register(sendDm)
   registry.register(getDmHistory)
+
+  // v0.3 tools — thread management
+  registry.register(archiveThread)
+  registry.register(addThreadMember)
+  registry.register(removeThreadMember)
+
+  // v0.3 tools — forums
+  registry.register(listForumPosts)
+  registry.register(createForumPost)
+  registry.register(readForumPost)
+
+  // v0.3 tools — attachments
+  registry.register(sendMessageWithAttachment)
+  registry.register(getAttachmentContent)
 
   await startServer(registry, client, config)
 }
