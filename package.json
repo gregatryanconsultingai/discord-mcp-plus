@@ -1,0 +1,32 @@
+{
+  "name": "discord-mcp-plus",
+  "version": "0.1.0",
+  "description": "Production-grade MCP server for Discord — search, pagination, safety controls, npx install",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "discord-mcp-plus": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "discord.js": "^14.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  }
+}
