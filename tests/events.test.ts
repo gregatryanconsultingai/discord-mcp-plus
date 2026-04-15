@@ -1,17 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { waitForMessage, _dispatchForTest } from '../src/tools/events.js'
+import { waitForMessage, _dispatchForTest, _clearWaitersForTest } from '../src/tools/events.js'
 import type { Client } from 'discord.js'
+import type { IncomingMessage } from '../src/tools/events.js'
 
 const mockClient = {} as Client
 const mockConfig = {} as any
 
-function makeMsg(overrides: Partial<{
-  id: string
-  channelId: string
-  author: { id: string; username: string }
-  content: string
-  createdAt: Date
-}> = {}) {
+function makeMsg(overrides: Partial<IncomingMessage> = {}): IncomingMessage {
   return {
     id: '1',
     channelId: 'ch1',
@@ -24,7 +19,10 @@ function makeMsg(overrides: Partial<{
 
 describe('waitForMessage', () => {
   beforeEach(() => { vi.useFakeTimers() })
-  afterEach(() => { vi.useRealTimers() })
+  afterEach(() => {
+    _clearWaitersForTest()
+    vi.useRealTimers()
+  })
 
   it('resolves with message when matching message arrives', async () => {
     const promise = waitForMessage.handler({ channelId: 'ch1' }, mockConfig, mockClient) as Promise<any>

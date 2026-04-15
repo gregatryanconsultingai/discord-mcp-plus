@@ -115,6 +115,10 @@ export const searchMessages: ToolDef = {
     const guildId = (args['guildId'] as string | undefined) ?? config.guildId
     if (!guildId) throw new Error('guildId is required: provide it as an argument or set GUILD_ID in config')
 
+    if (!args['content'] && !args['channelId'] && !args['authorId']) {
+      throw new Error('At least one of content, channelId, or authorId must be provided')
+    }
+
     const query: Record<string, string> = {}
     if (args['content']) query['content'] = args['content'] as string
     if (args['channelId']) query['channel_id'] = args['channelId'] as string
@@ -134,16 +138,20 @@ export const searchMessages: ToolDef = {
 
     return {
       totalResults: result.total_results,
-      messages: result.messages.map(hit => {
-        const msg = hit[0]!
-        return {
-          id: msg.id,
-          channelId: msg.channel_id,
-          author: { id: msg.author.id, username: msg.author.username },
-          content: msg.content,
-          timestamp: msg.timestamp,
-        }
-      }),
+      // Discord may return empty inner arrays for redacted messages; filter them out.
+      // totalResults reflects Discord's count, which may differ from messages.length.
+      messages: result.messages
+        .filter(hit => hit.length > 0)
+        .map(hit => {
+          const msg = hit[0]!
+          return {
+            id: msg.id,
+            channelId: msg.channel_id,
+            author: { id: msg.author.id, username: msg.author.username },
+            content: msg.content,
+            timestamp: msg.timestamp,
+          }
+        }),
     }
   },
 }

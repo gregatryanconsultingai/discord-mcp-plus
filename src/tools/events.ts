@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import type { Client } from 'discord.js'
 import type { ToolDef } from '../registry.js'
 
-interface IncomingMessage {
+export interface IncomingMessage {
   id: string
   channelId: string
   author: { id: string; username: string }
@@ -52,6 +52,14 @@ export function initEventDispatcher(client: Client): void {
 // Exported for testing — bypasses the Discord client event system
 export function _dispatchForTest(msg: IncomingMessage): void {
   dispatch(msg)
+}
+
+// Exported for testing — clears all pending waiters between tests
+export function _clearWaitersForTest(): void {
+  for (const waiter of waiters.values()) {
+    clearTimeout(waiter.timeoutHandle)
+  }
+  waiters.clear()
 }
 
 export const waitForMessage: ToolDef = {
