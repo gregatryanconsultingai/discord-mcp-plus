@@ -26,7 +26,27 @@ export class ToolRegistry {
   }
 
   listVisible(): ToolDef[] {
-    return Array.from(this.tools.values()).filter(t => this.isVisible(t))
+    return Array.from(this.tools.values())
+      .filter(t => this.isVisible(t))
+      .map(t => this.withConfirmTokenSchema(t))
+  }
+
+  private withConfirmTokenSchema(tool: ToolDef): ToolDef {
+    if (!this.config.confirmationToken || tool.kind !== 'destructive') return tool
+    const schema = tool.inputSchema as { type: string; properties: Record<string, unknown>; required?: string[] }
+    return {
+      ...tool,
+      inputSchema: {
+        ...schema,
+        properties: {
+          ...schema.properties,
+          confirmToken: {
+            type: 'string',
+            description: 'Confirmation token required for destructive actions (set via DISCORD_MCP_CONFIRM_TOKEN)',
+          },
+        },
+      },
+    }
   }
 
   private isVisible(tool: ToolDef): boolean {
@@ -69,6 +89,15 @@ export class ToolRegistry {
     let result: unknown
 
     try {
+      // Confirmation token: required for destructive tools when configured.
+      // The check lives inside the try/catch so failures are captured by the audit log.
+      if (this.config.confirmationToken && tool.kind === 'destructive') {
+        const provided = args['confirmToken'] as string | undefined
+        if (provided !== this.config.confirmationToken) {
+          throw new Error('Destructive action requires a valid confirmToken')
+        }
+      }
+
       result = await tool.handler(args, this.config, client)
     } catch (err) {
       // Audit ALL failures regardless of kind — error observability matters even for reads.

@@ -195,3 +195,52 @@ describe('ToolRegistry dry-run', () => {
     expect(result).toEqual({ ok: true })
   })
 })
+
+describe('ToolRegistry confirmation token', () => {
+  it('allows destructive call when correct token is provided', async () => {
+    const registry = new ToolRegistry({ ...baseConfig, confirmationToken: 'secret' })
+    registry.register(makeTool('delete_thing', 'destructive'))
+    const result = await registry.call('delete_thing', { confirmToken: 'secret' }, mockClient)
+    expect(result).toEqual({ ok: true })
+  })
+
+  it('rejects destructive call when wrong token is provided', async () => {
+    const registry = new ToolRegistry({ ...baseConfig, confirmationToken: 'secret' })
+    registry.register(makeTool('delete_thing', 'destructive'))
+    await expect(
+      registry.call('delete_thing', { confirmToken: 'wrong' }, mockClient)
+    ).rejects.toThrow('confirmToken')
+  })
+
+  it('rejects destructive call when token is missing from args', async () => {
+    const registry = new ToolRegistry({ ...baseConfig, confirmationToken: 'secret' })
+    registry.register(makeTool('delete_thing', 'destructive'))
+    await expect(
+      registry.call('delete_thing', {}, mockClient)
+    ).rejects.toThrow('confirmToken')
+  })
+
+  it('does not require token for write tools', async () => {
+    const registry = new ToolRegistry({ ...baseConfig, confirmationToken: 'secret' })
+    registry.register(makeTool('write_thing', 'write'))
+    const result = await registry.call('write_thing', {}, mockClient)
+    expect(result).toEqual({ ok: true })
+  })
+
+  it('injects confirmToken field into destructive tool schema when token is configured', () => {
+    const registry = new ToolRegistry({ ...baseConfig, confirmationToken: 'secret' })
+    registry.register(makeTool('delete_thing', 'destructive'))
+    const tools = registry.listVisible()
+    const schema = tools[0]!.inputSchema as any
+    expect(schema.properties.confirmToken).toBeDefined()
+    expect(schema.properties.confirmToken.type).toBe('string')
+  })
+
+  it('does not inject confirmToken when no token is configured', () => {
+    const registry = new ToolRegistry({ ...baseConfig, confirmationToken: false })
+    registry.register(makeTool('delete_thing', 'destructive'))
+    const tools = registry.listVisible()
+    const schema = tools[0]!.inputSchema as any
+    expect(schema.properties?.confirmToken).toBeUndefined()
+  })
+})
