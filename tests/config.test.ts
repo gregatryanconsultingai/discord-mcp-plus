@@ -106,3 +106,42 @@ describe('confirmationToken', () => {
     expect(config.confirmationToken).toBe(false)
   })
 })
+
+describe('http transport config', () => {
+  it('transport defaults to stdio when DISCORD_MCP_TRANSPORT is not set', () => {
+    const config = loadConfig({ DISCORD_TOKEN: 'tok' })
+    expect(config.transport).toBe('stdio')
+  })
+
+  it('parses DISCORD_MCP_TRANSPORT=http', () => {
+    const config = loadConfig({
+      DISCORD_TOKEN: 'tok',
+      DISCORD_MCP_TRANSPORT: 'http',
+      DISCORD_MCP_HTTP_TOKEN: 'secret',
+    })
+    expect(config.transport).toBe('http')
+  })
+
+  it('httpPort defaults to 3000; custom value parses correctly', () => {
+    const config = loadConfig({
+      DISCORD_TOKEN: 'tok',
+      DISCORD_MCP_TRANSPORT: 'http',
+      DISCORD_MCP_HTTP_TOKEN: 'secret',
+      DISCORD_MCP_HTTP_PORT: '8080',
+    })
+    expect(config.httpPort).toBe(8080)
+
+    const defaultConfig = loadConfig({
+      DISCORD_TOKEN: 'tok',
+      DISCORD_MCP_TRANSPORT: 'http',
+      DISCORD_MCP_HTTP_TOKEN: 'secret',
+    })
+    expect(defaultConfig.httpPort).toBe(3000)
+  })
+
+  it('throws when transport=http and DISCORD_MCP_HTTP_TOKEN is not set', () => {
+    expect(() =>
+      loadConfig({ DISCORD_TOKEN: 'tok', DISCORD_MCP_TRANSPORT: 'http' })
+    ).toThrow('DISCORD_MCP_HTTP_TOKEN is required')
+  })
+})

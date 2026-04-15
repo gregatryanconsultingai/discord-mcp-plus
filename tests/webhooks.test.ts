@@ -26,6 +26,8 @@ const baseConfig: Config = {
   auditLog: false,
   confirmationToken: false,
   transport: 'stdio',
+  httpPort: 3000,
+  httpToken: false,
 }
 
 const mockWebhookData = {

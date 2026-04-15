@@ -8,7 +8,9 @@ export interface Config {
   dryRun: boolean
   auditLog: string | false         // 'stderr', file path, or false (disabled)
   confirmationToken: string | false // false = feature disabled
-  transport: 'stdio'
+  transport: 'stdio' | 'http'
+  httpPort: number                 // default 3000; only meaningful when transport='http'
+  httpToken: string | false        // false = disabled (stdio mode); required string in http mode
 }
 
 function parseBoolean(val: string | undefined, defaultVal: boolean): boolean {
@@ -35,16 +37,28 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const token = env['DISCORD_TOKEN']
   if (!token) throw new Error('DISCORD_TOKEN is required')
 
+  const transport = (env['DISCORD_MCP_TRANSPORT'] ?? 'stdio') as 'stdio' | 'http'
+  if (transport !== 'stdio' && transport !== 'http') {
+    throw new Error("DISCORD_MCP_TRANSPORT must be 'stdio' or 'http'")
+  }
+  const httpToken = env['DISCORD_MCP_HTTP_TOKEN'] || false
+  if (transport === 'http' && !httpToken) {
+    throw new Error('DISCORD_MCP_HTTP_TOKEN is required when DISCORD_MCP_TRANSPORT=http')
+  }
+  const httpPort = parseInt(env['DISCORD_MCP_HTTP_PORT'] ?? '3000', 10)
+
   return {
     token,
     guildId: env['DISCORD_GUILD_ID'] || undefined,
     readonly: parseBoolean(env['DISCORD_MCP_READONLY'], false),
     toolsAllow: parseSet(env['DISCORD_MCP_TOOLS']),
-    toolsDeny: parseSet(env['DISCORD_MCP_TOOLS_DENY']) ?? new Set(), // never null — empty means no denylist
+    toolsDeny: parseSet(env['DISCORD_MCP_TOOLS_DENY']) ?? new Set(),
     channelsAllow: parseSet(env['DISCORD_MCP_CHANNELS']),
     dryRun: parseBoolean(env['DISCORD_MCP_DRY_RUN'], false),
     auditLog: parseAuditLog(env['DISCORD_MCP_AUDIT_LOG']),
     confirmationToken: env['DISCORD_MCP_CONFIRM_TOKEN'] || false,
-    transport: 'stdio', // only 'stdio' supported in v0.1; reserved for HTTP transport in v1.0
+    transport,
+    httpPort,
+    httpToken,
   }
 }

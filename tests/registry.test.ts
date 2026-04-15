@@ -15,6 +15,8 @@ const baseConfig: Config = {
   auditLog: false,
   confirmationToken: false,
   transport: 'stdio',
+  httpPort: 3000,
+  httpToken: false,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
