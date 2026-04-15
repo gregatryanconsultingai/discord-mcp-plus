@@ -1,0 +1,100 @@
+import type { Client } from 'discord.js'
+import type { Config } from './config.js'
+
+export type ToolKind = 'read' | 'write' | 'destructive'
+
+export interface ToolDef {
+  name: string
+  description: string
+  inputSchema: Record<string, unknown>
+  kind: ToolKind
+  handler: (args: Record<string, unknown>, config: Config, client: Client) => Promise<unknown>
+}
+
+export type AuditSink = (line: string) => void | Promise<void>
+
+export class ToolRegistry {
+  private tools = new Map<string, ToolDef>()
+
+  constructor(
+    private config: Config,
+    private auditSink?: AuditSink
+  ) {}
+
+  register(tool: ToolDef): void {
+    this.tools.set(tool.name, tool)
+  }
+
+  listVisible(): ToolDef[] {
+    return Array.from(this.tools.values()).filter(t => this.isVisible(t))
+  }
+
+  private isVisible(tool: ToolDef): boolean {
+    if (this.config.readonly && (tool.kind === 'write' || tool.kind === 'destructive')) {
+      return false
+    }
+    if (this.config.toolsDeny.has(tool.name)) return false
+    if (this.config.toolsAllow !== null && !this.config.toolsAllow.has(tool.name)) return false
+    return true
+  }
+
+  async call(
+    name: string,
+    args: Record<string, unknown>,
+    client: Client
+  ): Promise<unknown> {
+    const tool = this.tools.get(name)
+    if (!tool) throw new Error(`Unknown tool: ${name}`)
+    if (!this.isVisible(tool)) throw new Error(`Tool not available: ${name}`)
+
+    // Channel allowlist: only checked when channelId is present in args
+    if (tool.kind !== 'read' && this.config.channelsAllow !== null) {
+      const channelId = args['channelId'] as string | undefined
+      if (channelId && !this.config.channelsAllow.has(channelId)) {
+        throw new Error(`Channel ${channelId} is not in the allowed channel list`)
+      }
+    }
+
+    const start = Date.now()
+    let result: unknown
+
+    try {
+      result = await tool.handler(args, this.config, client)
+    } catch (err) {
+      await this.writeAudit(tool, args, Date.now() - start, 'error', err instanceof Error ? err.message : String(err))
+      throw err
+    }
+
+    if (tool.kind !== 'read') {
+      await this.writeAudit(tool, args, Date.now() - start, 'ok')
+    }
+
+    return result
+  }
+
+  private async writeAudit(
+    tool: ToolDef,
+    args: Record<string, unknown>,
+    durationMs: number,
+    result: 'ok' | 'error',
+    error?: string
+  ): Promise<void> {
+    if (!this.auditSink) return
+
+    const entry: Record<string, unknown> = {
+      ts: new Date().toISOString(),
+      tool: tool.name,
+      kind: tool.kind,
+      args,
+      durationMs,
+      result,
+    }
+    if (error) entry['error'] = error
+
+    try {
+      await this.auditSink(JSON.stringify(entry) + '\n')
+    } catch (err) {
+      console.error('Audit log write failed:', err)
+    }
+  }
+}
