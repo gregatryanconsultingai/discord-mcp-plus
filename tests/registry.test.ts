@@ -121,7 +121,7 @@ describe('ToolRegistry.call', () => {
     expect(result).toEqual({ ok: true })
   })
 
-  it('allows write when no channel allowlist and no channelId in args', async () => {
+  it('allows write when channelId is absent from args even if channelsAllow is set', async () => {
     const registry = new ToolRegistry({ ...baseConfig, channelsAllow: new Set(['allowed-ch']) })
     registry.register(makeTool('write_thing', 'write'))
     // Tool without channelId arg — channel allowlist does not apply
@@ -141,6 +141,7 @@ describe('ToolRegistry.call', () => {
     expect(entry.result).toBe('ok')
     expect(typeof entry.ts).toBe('string')
     expect(typeof entry.durationMs).toBe('number')
+    expect(entry.args).toEqual({ channelId: '123' })
   })
 
   it('writes audit log entry with result=error when handler throws', async () => {

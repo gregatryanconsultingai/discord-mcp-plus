@@ -47,7 +47,11 @@ export class ToolRegistry {
     if (!tool) throw new Error(`Unknown tool: ${name}`)
     if (!this.isVisible(tool)) throw new Error(`Tool not available: ${name}`)
 
-    // Channel allowlist: only checked when channelId is present in args
+    // Channel allowlist: enforced only when `channelId` is present in args.
+    // Tools without a channelId (e.g. guild-scoped tools) are not subject to
+    // channel restrictions. This is intentional — the channel allowlist is
+    // designed to scope write access to specific channels, not to block
+    // guild-level operations.
     if (tool.kind !== 'read' && this.config.channelsAllow !== null) {
       const channelId = args['channelId'] as string | undefined
       if (channelId && !this.config.channelsAllow.has(channelId)) {
