@@ -111,6 +111,7 @@ describe('http transport config', () => {
   it('transport defaults to stdio when DISCORD_MCP_TRANSPORT is not set', () => {
     const config = loadConfig({ DISCORD_TOKEN: 'tok' })
     expect(config.transport).toBe('stdio')
+    expect(config.httpToken).toBe(false)
   })
 
   it('parses DISCORD_MCP_TRANSPORT=http', () => {
@@ -120,6 +121,24 @@ describe('http transport config', () => {
       DISCORD_MCP_HTTP_TOKEN: 'secret',
     })
     expect(config.transport).toBe('http')
+    expect(config.httpToken).toBe('secret')
+  })
+
+  it('throws when DISCORD_MCP_TRANSPORT is an invalid value', () => {
+    expect(() =>
+      loadConfig({ DISCORD_TOKEN: 'tok', DISCORD_MCP_TRANSPORT: 'ftp' })
+    ).toThrow("DISCORD_MCP_TRANSPORT must be 'stdio' or 'http'")
+  })
+
+  it('throws when DISCORD_MCP_HTTP_PORT is not a valid port number', () => {
+    expect(() =>
+      loadConfig({
+        DISCORD_TOKEN: 'tok',
+        DISCORD_MCP_TRANSPORT: 'http',
+        DISCORD_MCP_HTTP_TOKEN: 'secret',
+        DISCORD_MCP_HTTP_PORT: 'notanumber',
+      })
+    ).toThrow('DISCORD_MCP_HTTP_PORT must be a valid port number')
   })
 
   it('httpPort defaults to 3000; custom value parses correctly', () => {

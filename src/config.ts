@@ -37,15 +37,19 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const token = env['DISCORD_TOKEN']
   if (!token) throw new Error('DISCORD_TOKEN is required')
 
-  const transport = (env['DISCORD_MCP_TRANSPORT'] ?? 'stdio') as 'stdio' | 'http'
-  if (transport !== 'stdio' && transport !== 'http') {
+  const rawTransport = env['DISCORD_MCP_TRANSPORT'] ?? 'stdio'
+  if (rawTransport !== 'stdio' && rawTransport !== 'http') {
     throw new Error("DISCORD_MCP_TRANSPORT must be 'stdio' or 'http'")
   }
+  const transport = rawTransport  // TypeScript narrows to 'stdio' | 'http' here
   const httpToken = env['DISCORD_MCP_HTTP_TOKEN'] || false
   if (transport === 'http' && !httpToken) {
     throw new Error('DISCORD_MCP_HTTP_TOKEN is required when DISCORD_MCP_TRANSPORT=http')
   }
   const httpPort = parseInt(env['DISCORD_MCP_HTTP_PORT'] ?? '3000', 10)
+  if (isNaN(httpPort) || httpPort < 1 || httpPort > 65535) {
+    throw new Error('DISCORD_MCP_HTTP_PORT must be a valid port number (1-65535)')
+  }
 
   return {
     token,
