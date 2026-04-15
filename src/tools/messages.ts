@@ -3,12 +3,14 @@ import type { ToolDef } from '../registry.js'
 
 export const getMessages: ToolDef = {
   name: 'get_messages',
-  description: 'Fetch recent messages from a Discord channel. Example: "Show me the last 20 messages in #general"',
+  description: 'Fetch recent messages from a Discord channel. Supports cursor-based pagination via before/after message IDs. Example: "Show me the last 20 messages in #general"',
   inputSchema: {
     type: 'object',
     properties: {
       channelId: { type: 'string', description: 'The channel ID to fetch messages from' },
       limit: { type: 'number', description: 'Number of messages to fetch (1-100, default: 50)' },
+      before: { type: 'string', description: 'Fetch messages before this message ID (cursor for backwards pagination)' },
+      after: { type: 'string', description: 'Fetch messages after this message ID (cursor for forwards pagination)' },
     },
     required: ['channelId'],
   },
@@ -16,7 +18,11 @@ export const getMessages: ToolDef = {
   handler: async (args, _config, client) => {
     const channel = await client.channels.fetch(args['channelId'] as string)
     if (!channel || !channel.isTextBased()) throw new Error('Channel not found or not a text channel')
-    const msgs = await channel.messages.fetch({ limit: (args['limit'] as number | undefined) ?? 50 })
+    const msgs = await channel.messages.fetch({
+      limit: (args['limit'] as number | undefined) ?? 50,
+      before: args['before'] as string | undefined,
+      after: args['after'] as string | undefined,
+    })
     return msgs.map(m => ({
       id: m.id,
       author: { id: m.author.id, username: m.author.username },
