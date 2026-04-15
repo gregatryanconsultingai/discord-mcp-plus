@@ -65,6 +65,7 @@ export class ToolRegistry {
     try {
       result = await tool.handler(args, this.config, client)
     } catch (err) {
+      // Audit ALL failures regardless of kind — error observability matters even for reads.
       await this.writeAudit(tool, args, Date.now() - start, 'error', err instanceof Error ? err.message : String(err))
       throw err
     }

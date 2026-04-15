@@ -2,9 +2,10 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 import type { Client } from 'discord.js'
+import type { Config } from './config.js'
 import type { ToolRegistry } from './registry.js'
 
-export async function startServer(registry: ToolRegistry, client: Client): Promise<void> {
+export async function startServer(registry: ToolRegistry, client: Client, _config: Config): Promise<void> {
   const server = new Server(
     { name: 'discord-mcp-plus', version: '0.1.0' },
     { capabilities: { tools: {} } }

@@ -23,7 +23,7 @@ async function main(): Promise<void> {
   registry.register(getServerInfo)
   registry.register(listBotPermissions)
 
-  await startServer(registry, client)
+  await startServer(registry, client, config)
 }
 
 main().catch(err => {
