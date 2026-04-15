@@ -11,7 +11,7 @@ import type { ToolRegistry } from './registry.js'
 
 export function createMcpServer(registry: ToolRegistry, client: Client): Server {
   const server = new Server(
-    { name: 'discord-mcp-plus', version: '1.0.0' },
+    { name: 'discord-mcp-plus', version: '1.0.1' },
     { capabilities: { tools: {} } }
   )
 
