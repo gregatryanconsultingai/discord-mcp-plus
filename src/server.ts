@@ -76,10 +76,13 @@ export function handleHttpRequest(
 export async function startServer(registry: ToolRegistry, client: Client, config: Config): Promise<void> {
   if (config.transport === 'http') {
     const mcpServer = createMcpServer(registry, client)
-    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: randomUUID })
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID() })
     await mcpServer.connect(transport)
     const httpServer = createServer((req, res) => handleHttpRequest(req, res, config, transport))
-    httpServer.listen(config.httpPort)
+    await new Promise<void>((resolve, reject) => {
+      httpServer.once('error', reject)
+      httpServer.listen(config.httpPort, () => resolve())
+    })
     return
   }
 

@@ -61,4 +61,15 @@ describe('handleHttpRequest', () => {
 
     expect(transport.handleRequest).toHaveBeenCalledWith(req, res)
   })
+
+  it('returns 404 when path is not /mcp', () => {
+    const req = makeReq({ authorization: 'Bearer secret123' }, '/other')
+    const res = makeRes()
+    const transport = makeTransport()
+
+    handleHttpRequest(req, res, httpConfig, transport)
+
+    expect(res.writeHead).toHaveBeenCalledWith(404, expect.any(Object))
+    expect(transport.handleRequest).not.toHaveBeenCalled()
+  })
 })
