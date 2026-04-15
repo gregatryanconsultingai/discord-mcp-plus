@@ -22,11 +22,17 @@ export async function loginClient(token: string): Promise<void> {
   })
 
   await new Promise<void>((resolve, reject) => {
-    client!.once('ready', () => {
+    const onReady = () => {
+      client!.off('error', onError)
       console.error(`[discord-mcp-plus] Logged in as ${client!.user?.tag}`)
       resolve()
-    })
-    client!.once('error', reject)
+    }
+    const onError = (err: Error) => {
+      client!.off('ready', onReady)
+      reject(err)
+    }
+    client!.once('ready', onReady)
+    client!.once('error', onError)
     client!.login(token).catch(reject)
   })
 }

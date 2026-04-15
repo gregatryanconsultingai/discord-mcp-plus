@@ -19,14 +19,13 @@ export const getServerInfo: ToolDef = {
     if (!guildId) throw new Error('guildId is required (or set DISCORD_GUILD_ID env var)')
 
     const guild = await client.guilds.fetch(guildId)
-    const channels = await guild.channels.fetch()
 
     return {
       id: guild.id,
       name: guild.name,
       description: guild.description ?? null,
       memberCount: guild.memberCount,
-      channelCount: channels.filter(c => c !== null).size,
+      channelCount: guild.channels.cache.size,
       createdAt: guild.createdAt.toISOString(),
       premiumTier: guild.premiumTier,
       features: guild.features,
@@ -56,7 +55,7 @@ export const listBotPermissions: ToolDef = {
     if (!guildId) throw new Error('guildId is required (or set DISCORD_GUILD_ID env var)')
 
     const guild = await client.guilds.fetch(guildId)
-    const me = await guild.members.fetchMe()
+    const me = guild.members.me ?? await guild.members.fetchMe()
 
     if (args['channelId']) {
       const channel = await client.channels.fetch(args['channelId'] as string)
